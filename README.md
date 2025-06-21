@@ -1,7 +1,8 @@
 # AI Powered YouTube Video Summarizer
 
+
 A modern, full-stack web app to generate concise, timestamped summaries of YouTube videos using AI (Google Gemini/GenAI). Paste a YouTube link and get a beautiful summary with clickable video breakpoints, thumbnail preview, and export options—all in a sleek, dark-mode-friendly UI.
----
+
 
 ## Features
 
