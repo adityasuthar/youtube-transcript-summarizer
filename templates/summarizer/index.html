@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Powered YouTube Video Summarizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg-color: #ffffff;
+            --text-color: #212529;
+            --muted-text-color: #6c757d;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0,0,0,0.10);
+            --btn-light-bg: #f8f9fa;
+        }
+        body.dark-mode {
+            --bg-color: #121212;
+            --card-bg-color: #1e1e1e;
+            --text-color: #f8f9fa;
+            --muted-text-color: #bfc5cc;
+            --border-color: #495057;
+            --shadow-color: rgba(0,0,0,0.4);
+            --btn-light-bg: #343a40;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .main-container {
+            max-width: 720px;
+            margin: 60px auto;
+            padding: 32px 24px 24px 24px;
+            background-color: var(--card-bg-color);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px var(--shadow-color);
+            position: relative;
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            color: var(--muted-text-color);
+        }
+        .title {
+            font-weight: 700;
+            font-size: 2.2rem;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+        .subtitle {
+            color: var(--muted-text-color);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .nav-tabs { border-bottom-color: var(--border-color); }
+        .nav-tabs .nav-link { color: var(--muted-text-color); border-color: transparent; }
+        .nav-tabs .nav-link.active {
+            background-color: transparent;
+            color: var(--text-color);
+            font-weight: 600;
+            border-bottom: 2px solid #0d6efd;
+        }
+        .nav-link.disabled {
+            color: #6c757d;
+            opacity: 0.5;
+        }
+        body.dark-mode .nav-link.disabled {
+            color: #acb1b5;
+        }
+        .form-control {
+            background-color: var(--card-bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1.05rem;
+            padding: 0.75rem 1rem;
+        }
+        .form-control::placeholder {
+            color: var(--muted-text-color);
+            opacity: 0.6;
+        }
+        .form-control:focus {
+             background-color: var(--card-bg-color);
+             color: var(--text-color);
+             border-color: #86b7fe;
+             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .btn-generate {
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0.75rem 0;
+            margin-top: 1rem;
+        }
+        .summary-card { margin-top: 32px; }
+        .card {
+            background-color: var(--card-bg-color);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border-radius: 18px;
+            animation: fadeIn 0.7s;
+            border: 1px solid var(--border-color);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-action {
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background-color: var(--btn-light-bg);
+            color: var(--text-color);
+            border-color: var(--border-color);
+        }
+        .yt-thumb {
+            max-width: 480px;
+            border-radius: 12px;
+        }
+        .timestamp-link {
+            font-size: 0.98em;
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .features-section { padding: 60px 0; }
+        .features-title { font-weight: 700; margin-bottom: 0.5rem; }
+        .features-subtitle { color: var(--muted-text-color); font-size: 1.1rem; }
+        .feature-card {
+            background-color: var(--card-bg-color);
+            padding: 24px;
+            border-radius: 18px;
+            text-align: center;
+            height: 100%;
+            box-shadow: 0 4px 16px var(--shadow-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--border-color);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px var(--shadow-color);
+        }
+        .feature-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0d6efd, #6f42c1);
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+        .feature-title { font-weight: 600; }
+        .feature-text { color: var(--muted-text-color); font-size: 0.95rem; }
+        @media (max-width: 768px) {
+            .main-container { padding: 18px 4px; margin: 30px auto; }
+            .yt-thumb { max-width: 100%; }
+        }
+        /* Ensure summary text is visible in dark mode */
+        body.dark-mode .card-text,
+        body.dark-mode .card-text p,
+        body.dark-mode .card-text li,
+        body.dark-mode .card-text ul,
+        body.dark-mode .card-text ol,
+        body.dark-mode .card-text strong,
+        body.dark-mode .card-text span {
+            color: #f8f9fa !important;
+        }
+        /* Ensure card title is visible in dark mode */
+        body.dark-mode .card-title {
+            color: #f8f9fa !important;
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div id="theme-toggle" class="theme-toggle">
+        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-moon-stars-fill" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/><path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162h1.234a.217.217 0 0 1 .148.402l-1.018.736.387 1.162a.217.217 0 0 1-.316.29l-1.018-.736-1.018.736a.217.217 0 0 1-.316-.29l.387-1.162-1.018-.736a.217.217 0 0 1 .148-.402h1.234l.387-1.162zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a.76.76 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a.76.76 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L13.863.1z"/></svg>
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-sun-fill" viewBox="0 0 16 16" style="display: none;"><path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707z"/></svg>
+    </div>
+    <div class="text-center">
+        <div class="title">AI Powered YouTube Video Summarizer</div>
+        <div class="subtitle">Paste a YouTube link and get a concise, timestamped summary powered by AI.</div>
+    </div>
+    <ul class="nav nav-tabs mb-3" id="inputTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="yt-link-tab" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-youtube" viewBox="0 0 16 16" style="margin-bottom:2px;">
+                  <path d="M8.051 1.999h-.002C3.684 1.999 1.5 3.13 1.5 7.999c0 4.87 2.184 6 6.549 6h.002c4.367 0 6.549-1.13 6.549-6 0-4.87-2.182-6-6.549-6zM6.5 10.5v-5l4 2.5-4 2.5z"/>
+                </svg>
+                YouTube Video Link
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link disabled" type="button" aria-disabled="true">Playlist (coming soon)</button>
+        </li>
+    </ul>
+    <form id="summarize-form">
+        <div class="input-group mb-2">
+            <input type="url" class="form-control" id="video_url" required placeholder="Paste YouTube video link here">
+        </div>
+        <button type="submit" class="btn btn-primary w-100 btn-generate">Generate Summary</button>
+    </form>
+    <div id="summary-result" class="summary-card"></div>
+</div>
+
+<div class="container features-section">
+    <div class="text-center">
+        <h2 class="features-title">Discover Our Features</h2>
+        <p class="features-subtitle">Everything you need to get video insights, fast.</p>
+    </div>
+    <div class="row mt-4 g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-robot" viewBox="0 0 16 16"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.932a.25.25 0 0 0-.192-.41l-1.868.252a.25.25 0 0 0-.165.068l-.595.595-.453-.907a.25.25 0 0 0-.07-.091Z"/></svg></div>
+                <h5 class="feature-title">AI Summaries</h5>
+                <p class="feature-text">Get concise summaries of any YouTube video in seconds.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.272zm.832 1.29a6.99 6.99 0 0 0-.343-.334l.74-.66c.257.288.5.596.732.914l-.82.575a6.98 6.98 0 0 0-.343-.334zM8 5a.5.5 0 0 1 .5.5v2.53c0 .121.038.236.109.34l1.5 1.5a.5.5 0 0 1-.708.708l-1.5-1.5A.5.5 0 0 1 8 8.5V5.5a.5.5 0 0 1 .5-.5z"/><path d="M8 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zM8.5 1.766a.5.5 0 0 1-.354.462l-1.5 1a.5.5 0 0 1-.708-.708l1.5-1a.5.5 0 0 1 .521-.065l.98 1.96a.5.5 0 0 1-.894.448L8.5 1.766z"/></svg></div>
+                <h5 class="feature-title">Timestamped Links</h5>
+                <p class="feature-text">Jump directly to key moments with clickable video timestamps.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg></div>
+                <h5 class="feature-title">Copy & Download</h5>
+                <p class="feature-text">Easily copy the summary or download it as a PDF for offline use.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-image-alt" viewBox="0 0 16 16"><path d="M11 7.5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 .5-.5zM7.5 5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0v-5a.5.5 0 0 1 .5-.5z"/><path d="M12.5 1.5a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-1 0V2a.5.5 0 0 1 .5-.5zM1.5 12a.5.5 0 0 0 .5.5h12a.5.5 0 0 0 0-1H2a.5.5 0 0 0-.5.5z"/></svg></div>
+                <h5 class="feature-title">Thumbnail Preview</h5>
+                <p class="feature-text">Confirm the right video with an automatic thumbnail preview.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jsPDF for PDF download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- html2pdf for better PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- Bootstrap JS for tooltips -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Theme toggle logic
+const themeToggle = document.getElementById('theme-toggle');
+const sunIcon = document.getElementById('sun-icon');
+const moonIcon = document.getElementById('moon-icon');
+
+function setIcon(isDarkMode) {
+    sunIcon.style.display = isDarkMode ? 'block' : 'none';
+    moonIcon.style.display = isDarkMode ? 'none' : 'block';
+}
+
+themeToggle.addEventListener('click', () => {
+    const isDarkMode = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    setIcon(isDarkMode);
+});
+
+// Apply theme on load
+(function () {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.body.classList.add('dark-mode');
+        setIcon(true);
+    } else {
+        setIcon(false);
+    }
+})();
+
+function showSpinner() {
+    document.getElementById('summary-result').innerHTML =
+        '<div class="d-flex justify-content-center align-items-center" style="height: 100px;">' +
+        '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>' +
+        '</div>';
+}
+
+function copyToClipboard(html) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    const text = tempDiv.innerText;
+    navigator.clipboard.writeText(text).then(function() {
+        showTooltip('copy-btn', 'Copied!');
+    });
+}
+
+function downloadPDF(html) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    const text = tempDiv.innerText;
+    const doc = new window.jspdf.jsPDF();
+    doc.setFont('helvetica');
+    doc.setFontSize(12);
+    doc.text(text, 10, 20, {maxWidth: 180});
+    doc.save('summary.pdf');
+}
+
+function showTooltip(btnId, message) {
+    const btn = document.getElementById(btnId);
+    btn.setAttribute('data-bs-original-title', message);
+    const tooltip = bootstrap.Tooltip.getOrCreateInstance(btn);
+    tooltip.show();
+    setTimeout(() => tooltip.hide(), 1200);
+}
+
+document.getElementById('summarize-form').onsubmit = async function(e) {
+    e.preventDefault();
+    showSpinner();
+    const video_url = document.getElementById('video_url').value;
+    const response = await fetch('/summarize/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({video_url})
+    });
+    const data = await response.json();
+    if (data.summary_html && data.paragraphs && data.breakpoints) {
+        let videoIdMatch = video_url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        let videoId = videoIdMatch ? videoIdMatch[1] : null;
+        let thumbnailHtml = videoId ? `<div class='text-center mb-3'><img src='https://img.youtube.com/vi/${videoId}/hqdefault.jpg' alt='Video Thumbnail' class='yt-thumb'></div>` : "";
+        let summaryWithLinks = '';
+        for (let i = 0; i < data.paragraphs.length; i++) {
+            summaryWithLinks += `<p>${data.paragraphs[i]}</p>`;
+            if (data.breakpoints[i]) {
+                let min = Math.floor(data.breakpoints[i].time / 60);
+                let sec = data.breakpoints[i].time % 60;
+                let timeStr = `${min}:${sec.toString().padStart(2, '0')}`;
+                summaryWithLinks += `<div class='mb-3'><a href='${data.breakpoints[i].url}' target='_blank' class='timestamp-link'>🔗 Go to ${timeStr}</a></div>`;
+            }
+        }
+        document.getElementById('summary-result').innerHTML =
+            `${thumbnailHtml}<div class=\"card\">
+                <div class=\"card-body p-4\">
+                    <div class=\"d-flex justify-content-between align-items-center mb-3\">
+                        <h5 class=\"card-title m-0\">Summary</h5>
+                        <div class=\"d-flex gap-2\">
+                            <button id=\"copy-btn\" type=\"button\" class=\"btn btn-light btn-action\" data-bs-toggle=\"tooltip\" data-bs-placement=\"top\" title=\"Copy summary text\">
+                                <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-clipboard me-2\" viewBox=\"0 0 16 16\"><path d=\"M10 1.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 1 .5.5v10a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5z\"/><path d=\"M9.5 1.5v1a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1h3z\"/></svg>
+                                Copy
+                            </button>
+                            <button id=\"pdf-btn\" type=\"button\" class=\"btn btn-light btn-action\" data-bs-toggle=\"tooltip\" data-bs-placement=\"top\" title=\"Download summary as PDF\">
+                                <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-file-earmark-arrow-down me-2\" viewBox=\"0 0 16 16\"><path d=\"M8 5a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 9.293V5.5A.5.5 0 0 1 8 5z\"/><path d=\"M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3-2.5v2a1 1 0 0 0 1 1h2v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h7z\"/></svg>
+                                Download PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class=\"card-text\" id=\"summary-html\">${summaryWithLinks}</div>
+                </div>
+            </div>`;
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        document.getElementById('copy-btn').onclick = function() {
+            copyToClipboard(document.getElementById('summary-html').innerHTML);
+        };
+        document.getElementById('pdf-btn').onclick = function() {
+            downloadPDF(document.getElementById('summary-html').innerHTML);
+        };
+    } else {
+        document.getElementById('summary-result').innerHTML =
+            `<div class="alert alert-danger">${data.error}</div>`;
+    }
+};
+</script>
+</body>
+</html>
