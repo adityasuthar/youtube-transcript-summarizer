@@ -3,3 +3,5 @@ youtube-transcript-api
 google-generativeai
 django-cors-headers
 gunicorn
+python-dotenv
+markdown
