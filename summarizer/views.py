@@ -34,7 +34,7 @@ def summarize_video(request):
 
         # Get transcript
         try:
-            transcript = YouTubeTranscriptApi.get_transcript(video_id)
+            transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'en-IN'])
             transcript_text = " ".join([x['text'] for x in transcript])
         except Exception as e:
             return JsonResponse({"error": f"Transcript error: {str(e)}"}, status=400)
